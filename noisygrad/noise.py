@@ -2,27 +2,24 @@ import torch
 
 
 class GradientNoiseHook:
-    """Hook to multiply gradients by zero-centered noise during backpropagation"""
+    """Hook to add zero-centered noise to gradients during backpropagation"""
 
-    def __init__(self, std: float = 0.01, prob: float = 1.0, mode: str = "addition"):
+    def __init__(self, std: float, mode: str, generator: torch.Generator):
         self.std = std
-        self.prob = prob
         self.mode = mode
+        self.generator = generator  # Dedicated RNG so noise draws don't shift data order or init
         self.hooks = []
-        print(f"GradientNoiseHook initialized with std={std}, prob={prob}, mode={mode}")
 
     def apply_noise_to_grad(self, grad):
         """Apply zero-centered noise to gradients via multiplication or addition"""
-        if self.std > 0 and torch.rand(1).item() < self.prob:
-            if self.mode == "multiplication":
-                noise_multiplier = torch.normal(mean=1, std=self.std, size=grad.size()).to(grad.device)
-                return grad * noise_multiplier
-            elif self.mode == "addition":
-                noise = torch.normal(mean=0, std=self.std, size=grad.size()).to(grad.device)
-                return grad + noise
-            else:
-                raise ValueError(f"Unsupported mode: {self.mode}")
-        return grad
+        if self.std == 0:
+            return grad
+        noise = torch.randn(grad.shape, generator=self.generator, device=grad.device, dtype=grad.dtype) * self.std
+        if self.mode == "multiplication":
+            return grad * (1 + noise)
+        elif self.mode == "addition":
+            return grad + noise
+        raise ValueError(f"Unsupported mode: {self.mode}")
 
     def register_hooks(self, model):
         """Register hooks to all parameters in the model"""
@@ -38,9 +35,3 @@ class GradientNoiseHook:
         for hook in self.hooks:
             hook.remove()
         self.hooks = []
-
-    def update_noise_params(self, std: float, prob: float = 1.0, mode: str = "addition"):
-        """Update noise parameters"""
-        self.std = std
-        self.prob = prob
-        self.mode = mode

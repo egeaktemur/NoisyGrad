@@ -1,42 +1,23 @@
 import argparse
 
-import torch
-
-from noisygrad import CNNTestFramework, ExperimentConfig
+from noisygrad import ExperimentConfig, run_sweep
 
 
 def main():
     parser = argparse.ArgumentParser(description="Compare gradient noise levels and modes")
     parser.add_argument("--dataset", choices=["MNIST", "CIFAR10"], default="MNIST")
     parser.add_argument("--epochs", type=int, default=25)
+    parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
+    parser.add_argument("--stds", type=float, nargs="+", default=[0.0, 0.01, 1, 0.001, 0.5, 0.1, 0.05])
+    parser.add_argument("--modes", nargs="+", default=["addition", "multiplication"])
     args = parser.parse_args()
 
-    config = ExperimentConfig(
-        dataset=args.dataset,
-        batch_size=128,
-        learning_rate=0.001,
-        epochs=args.epochs,
-        gradient_noise_std=0.0,
-        gradient_noise_prob=1.0,
-        gradient_noise_mode="addition",
-        device="cuda" if torch.cuda.is_available() else "cpu"
-    )
+    config = ExperimentConfig(dataset=args.dataset, epochs=args.epochs)
+    print(f"\nComparing gradient noise levels: {args.stds}")
+    print(f"Comparing gradient noise modes: {args.modes}")
+    print(f"Seeds: {args.seeds}")
 
-    # Create framework
-    framework = CNNTestFramework(config)
-
-    noise_levels = [0.0, 0.01, 1, 0.001, 0.5, 0.1, 0.05]
-    mode_types = ["addition", "multiplication"]
-    print(f"\nComparing gradient noise levels: {noise_levels}")
-    print(f"Comparing gradient noise modes: {mode_types}")
-
-    framework.compare(noise_levels, mode_types)
-
-    # Plot results for the last experiment
-    framework.plot_results()
-
-    # Save all results
-    framework.save_results(f"{args.dataset}experiment_results.json", framework.results)
+    run_sweep(config, args.stds, args.modes, args.seeds)
 
 
 if __name__ == "__main__":

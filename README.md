@@ -10,8 +10,10 @@ This repo trains small CNNs on MNIST / CIFAR-10 with Gaussian noise injected int
   - `addition`: `grad + N(0, std)`
   - `multiplication`: `grad * N(1, std)`
 - **Annealing**: noise std decays per epoch as `std * (1 - epoch / epochs) ** 2`.
-- **Optimizer**: Adam, lr 1e-3, batch size 128, 25 epochs, seed 42. Every run starts from the same initialization.
-- **Sweep**: std ∈ {0, 0.01, 1, 0.001, 0.5, 0.1, 0.05} × {addition, multiplication}. The noise-free baseline is trained only once.
+- **Optimizer**: Adam, lr 1e-3, batch size 128, 25 epochs.
+- **Seeds**: each config runs over seeds {0, 1, 2}. Initialization, data order/augmentation and noise use separate RNG streams, so for a given seed every noise setting sees the same init and the same batches as the baseline.
+- **Model selection**: 5,000 training images are held out as a fixed validation split. The reported number is test accuracy at the epoch with the best validation accuracy.
+- **Sweep**: std ∈ {0, 0.01, 1, 0.001, 0.5, 0.1, 0.05} × {addition, multiplication}. The noise-free baseline is trained once per seed.
 
 ## Usage
 
@@ -20,9 +22,9 @@ pip install -r requirements.txt
 python run.py --dataset MNIST      # or CIFAR10
 ```
 
-Datasets download to `data/`. Per-run results go to `results/results_<name>.json` and plots to `plots/results_<name>.png`. Any run whose JSON already exists is loaded from disk instead of being retrained.
+Options: `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<name>_<config hash>.json` and plots to `plots/<name>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
 
-## MNIST results (25 epochs)
+## MNIST results (25 epochs, earlier setup: single seed 42, no validation split)
 
 | Noise std | Mode           | Final test acc | Best test acc |
 |-----------|----------------|----------------|---------------|
