@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from .config import ExperimentConfig
 from .data import load_dataset
 from .models import CIFAR10Net, MNISTNet
-from .noise import GradientNoiseHook
+from .noise import GradientNoise
 
 # Offsets give init, data order and noise independent RNG streams for the same seed
 DATA_SEED_OFFSET = 10_000
@@ -23,6 +23,14 @@ def create_model(dataset: str) -> nn.Module:
     elif dataset == "CIFAR10":
         return CIFAR10Net()
     raise ValueError(f"Unsupported dataset: {dataset}")
+
+
+def create_optimizer(config: ExperimentConfig, params) -> optim.Optimizer:
+    if config.optimizer == "sgd":
+        return optim.SGD(params, lr=config.learning_rate, momentum=config.momentum)
+    elif config.optimizer == "adam":
+        return optim.Adam(params, lr=config.learning_rate)
+    raise ValueError(f"Unsupported optimizer: {config.optimizer}")
 
 
 def train_epoch(model, loader: DataLoader, criterion, optimizer, device) -> Dict[str, float]:
@@ -82,39 +90,43 @@ def train(config: ExperimentConfig) -> Dict:
     torch.manual_seed(config.seed)
     model = create_model(config.dataset).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
+    optimizer = create_optimizer(config, model.parameters())
 
-    noise_hook = GradientNoiseHook(config.gradient_noise_std, config.gradient_noise_mode, noise_gen)
-    if config.gradient_noise_std > 0:
-        noise_hook.register_hooks(model)
+    noise = GradientNoise(config.gradient_noise_std, config.gradient_noise_mode, noise_gen)
+    noise_handle = noise.attach(optimizer)
 
     history = {f"{split}_{metric}": [] for split in ("train", "val", "test") for metric in ("losses", "accuracies")}
-    noise_stds = []
+    noise_stds, grad_norms, realized_snrs = [], [], []
     start_time = time.time()
 
     for epoch in range(config.epochs):
         # Anneal gradient noise std
-        noise_hook.std = config.gradient_noise_std * ((1 - (epoch / config.epochs)) ** 2)
-        noise_stds.append(noise_hook.std)
+        noise.std = config.gradient_noise_std * ((1 - (epoch / config.epochs)) ** 2)
+        noise_stds.append(noise.std)
 
         metrics = {
             'train': train_epoch(model, train_loader, criterion, optimizer, device),
             'val': evaluate(model, val_loader, criterion, device),
             'test': evaluate(model, test_loader, criterion, device),
         }
+        noise_stats = noise.pop_stats()
+        grad_norms.append(noise_stats['grad_norm'])
+        realized_snrs.append(noise_stats['snr'])
         for split, m in metrics.items():
             history[f"{split}_losses"].append(m['loss'])
             history[f"{split}_accuracies"].append(m['accuracy'])
 
         if (epoch + 1) % 5 == 0 or epoch == 0:
             print(f"Epoch {epoch+1}/{config.epochs}: "
-                  f"Noise std: {noise_hook.std:.6f}, "
+                  f"Noise std: {noise.std:.6f}, "
+                  f"Realized SNR: {noise_stats['snr']:.4f}, "
+                  f"Grad norm: {noise_stats['grad_norm']:.4f}, "
                   f"Train Loss: {metrics['train']['loss']:.4f}, "
                   f"Train Acc: {metrics['train']['accuracy']:.2f}%, "
                   f"Val Acc: {metrics['val']['accuracy']:.2f}%, "
                   f"Test Acc: {metrics['test']['accuracy']:.2f}%")
 
-    noise_hook.remove_hooks()
+    noise_handle.remove()
     training_time = time.time() - start_time
 
     # Pick the epoch on val, report test at that epoch
@@ -125,6 +137,8 @@ def train(config: ExperimentConfig) -> Dict:
         'config_key': config.key(),
         **history,
         'noise_stds': noise_stds,
+        'grad_norms': grad_norms,
+        'realized_snrs': realized_snrs,
         'final_test_accuracy': history['test_accuracies'][-1],
         'best_val_epoch': best_epoch + 1,
         'best_val_accuracy': history['val_accuracies'][best_epoch],
