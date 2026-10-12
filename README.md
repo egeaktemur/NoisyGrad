@@ -31,7 +31,7 @@ python run.py --dataset MNIST      # or CIFAR10, CIFAR100
 python -m pytest tests             # noise unit tests
 ```
 
-Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<name>_<config hash>.json` and plots to `plots/<name>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
+Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<dataset>/<name>_<config hash>.json` and training curves to `plots/<dataset>/<name>_<config hash>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
 
 ## MNIST results (25 epochs, earlier setup: Adam, absolute noise `grad + N(0, std)` / `grad * N(1, std)`, single seed 42, no validation split)
 
@@ -51,6 +51,6 @@ Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--mo
 | 1         | addition       | 98.59%         | 98.59%        |
 | 1         | multiplication | 98.48%         | 98.48%        |
 
-Under that setup no noise setting beat the noise-free baseline on MNIST. Its training curves are the `plots/results_*.png` files. These numbers are not comparable with the current setup: Adam largely cancels absolute gradient noise, the noise scale ignored gradient magnitude, and a single seed cannot resolve differences of this size.
+Under that setup no noise setting beat the noise-free baseline on MNIST. Its training curves are in [plots/MNIST/legacy/](plots/MNIST/legacy/). These numbers are not comparable with the current setup: Adam largely cancels absolute gradient noise, the noise scale ignored gradient magnitude, and a single seed cannot resolve differences of this size.
 
 Results for the current setup (SGD, relative noise, 3 seeds) are pending. CIFAR-10 and CIFAR-100 have not been run yet. CIFAR-100 uses the CIFAR-10 CNN with a 100-way output layer.

@@ -15,18 +15,19 @@ PLOTS_DIR = "plots"
 
 def run_cached(config: ExperimentConfig) -> Dict:
     """Train `config`, or load its results if this exact config was already run"""
-    path = os.path.join(RESULTS_DIR, f"{config.name}_{config.key()}.json")
+    run_id = f"{config.name}_{config.key()}"
+    path = os.path.join(RESULTS_DIR, config.dataset, f"{run_id}.json")
     if os.path.exists(path):
         print(f"Loaded cached results for {config.name} from {path}")
         with open(path) as f:
             return json.load(f)
 
     results = train(config)
-    os.makedirs(RESULTS_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
         json.dump(results, f, indent=4)
     print(f"Results saved to {path}")
-    plot_results(results, os.path.join(PLOTS_DIR, f"{config.name}.png"))
+    plot_results(results, os.path.join(PLOTS_DIR, config.dataset, f"{run_id}.png"))
     return results
 
 
