@@ -13,10 +13,10 @@ RESULTS_DIR = "results"
 PLOTS_DIR = "plots"
 
 
-def run_cached(config: ExperimentConfig) -> Dict:
+def run_cached(config: ExperimentConfig, subdir: str = "") -> Dict:
     """Train `config`, or load its results if this exact config was already run"""
     run_id = f"{config.name}_{config.key()}"
-    path = os.path.join(RESULTS_DIR, config.dataset, f"{run_id}.json")
+    path = os.path.join(RESULTS_DIR, subdir, config.dataset, f"{run_id}.json")
     if os.path.exists(path):
         print(f"Loaded cached results for {config.name} from {path}")
         with open(path) as f:
@@ -27,12 +27,12 @@ def run_cached(config: ExperimentConfig) -> Dict:
     with open(path, 'w') as f:
         json.dump(results, f, indent=4)
     print(f"Results saved to {path}")
-    plot_results(results, os.path.join(PLOTS_DIR, config.dataset, f"{run_id}.png"))
+    plot_results(results, os.path.join(PLOTS_DIR, subdir, config.dataset, f"{run_id}.png"))
     return results
 
 
 def run_sweep(base: ExperimentConfig, noise_stds: List[float], modes: List[str],
-              seeds: List[int]) -> Dict[tuple, List[Dict]]:
+              seeds: List[int], subdir: str = "") -> Dict[tuple, List[Dict]]:
     """Run every (std, mode) for every seed. The noise-free baseline is run once per seed."""
     grid = [(0.0, "none")] + [(std, mode) for std in noise_stds if std > 0 for mode in modes]
     all_results = {}
@@ -40,7 +40,7 @@ def run_sweep(base: ExperimentConfig, noise_stds: List[float], modes: List[str],
         all_results[(std, mode)] = [
             run_cached(replace(base, gradient_noise_std=std,
                                gradient_noise_mode=base.gradient_noise_mode if std == 0 else mode,
-                               seed=seed))
+                               seed=seed), subdir)
             for seed in seeds
         ]
     print_summary(all_results)

@@ -32,7 +32,7 @@ python run.py --dataset MNIST      # or CIFAR10, CIFAR100, SVHN
 python -m pytest tests             # noise unit tests
 ```
 
-Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<dataset>/<name>_<config hash>.json` and training curves to `plots/<dataset>/<name>_<config hash>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
+Options: `--optimizer`, `--lr`, `--lr-schedule cosine`, `--subdir <name>` (save under `results/<name>/` and `plots/<name>/`), `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<dataset>/<name>_<config hash>.json` and training curves to `plots/<dataset>/<name>_<config hash>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
 
 ## Results
 

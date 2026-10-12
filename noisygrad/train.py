@@ -35,6 +35,14 @@ def create_optimizer(config: ExperimentConfig, params) -> optim.Optimizer:
     raise ValueError(f"Unsupported optimizer: {config.optimizer}")
 
 
+def create_scheduler(config: ExperimentConfig, optimizer: optim.Optimizer):
+    if config.lr_schedule == "none":
+        return None
+    elif config.lr_schedule == "cosine":
+        return optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.epochs)
+    raise ValueError(f"Unsupported lr schedule: {config.lr_schedule}")
+
+
 def train_epoch(model, loader: DataLoader, criterion, optimizer, device) -> Dict[str, float]:
     """Train for one epoch"""
     model.train()
@@ -93,6 +101,7 @@ def train(config: ExperimentConfig) -> Dict:
     model = create_model(config.dataset).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = create_optimizer(config, model.parameters())
+    scheduler = create_scheduler(config, optimizer)
 
     noise = GradientNoise(config.gradient_noise_std, config.gradient_noise_mode, noise_gen)
     noise_handle = noise.attach(optimizer)
@@ -111,6 +120,8 @@ def train(config: ExperimentConfig) -> Dict:
             'val': evaluate(model, val_loader, criterion, device),
             'test': evaluate(model, test_loader, criterion, device),
         }
+        if scheduler is not None:
+            scheduler.step()
         noise_stats = noise.pop_stats()
         grad_norms.append(noise_stats['grad_norm'])
         realized_snrs.append(noise_stats['snr'])

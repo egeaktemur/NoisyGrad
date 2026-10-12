@@ -13,6 +13,7 @@ class ExperimentConfig:
     batch_size: int = 128
     learning_rate: float = 0.01
     momentum: float = 0.9  # SGD only
+    lr_schedule: str = "none"  # "none" or "cosine" (decays to 0 over `epochs`)
     epochs: int = 25
     val_size: int = 5000  # Held out from the training set for model selection
     gradient_noise_std: float = 0.0  # Noise-to-signal ratio: noise RMS as a multiple of each gradient's RMS
@@ -32,6 +33,8 @@ class ExperimentConfig:
         del settings["device"]
         if self.optimizer != "sgd":
             del settings["momentum"]
+        if self.lr_schedule == "none":
+            del settings["lr_schedule"]  # Keeps keys of runs from before this option existed
         if self.gradient_noise_std == 0:
             del settings["gradient_noise_mode"]
         blob = json.dumps(settings, sort_keys=True)

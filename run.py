@@ -9,6 +9,8 @@ def main():
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--optimizer", choices=["sgd", "adam"], default="sgd")
     parser.add_argument("--lr", type=float, default=None, help="Default: 0.01 for sgd, 0.001 for adam")
+    parser.add_argument("--lr-schedule", choices=["none", "cosine"], default="none")
+    parser.add_argument("--subdir", default="", help="Save under results/<subdir>/ and plots/<subdir>/")
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--stds", type=float, nargs="+", default=[0.0, 0.1, 0.3, 1, 3],
                         help="Noise-to-signal ratios (noise RMS / gradient RMS)")
@@ -16,12 +18,13 @@ def main():
     args = parser.parse_args()
 
     lr = args.lr if args.lr is not None else {"sgd": 0.01, "adam": 0.001}[args.optimizer]
-    config = ExperimentConfig(dataset=args.dataset, epochs=args.epochs, optimizer=args.optimizer, learning_rate=lr)
+    config = ExperimentConfig(dataset=args.dataset, epochs=args.epochs, optimizer=args.optimizer,
+                              learning_rate=lr, lr_schedule=args.lr_schedule)
     print(f"\nComparing gradient noise levels: {args.stds}")
     print(f"Comparing gradient noise modes: {args.modes}")
     print(f"Seeds: {args.seeds}")
 
-    run_sweep(config, args.stds, args.modes, args.seeds)
+    run_sweep(config, args.stds, args.modes, args.seeds, args.subdir)
 
 
 if __name__ == "__main__":
