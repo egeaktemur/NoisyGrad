@@ -21,6 +21,11 @@ This repo trains small CNNs on MNIST / CIFAR-10 with Gaussian noise added to eve
 
 ```bash
 pip install -r requirements.txt
+
+# Download datasets to data/ (run.py also downloads on first use, but parallel runs would race on the download)
+python -c "import torchvision; torchvision.datasets.MNIST('data', download=True)"
+python -c "import torchvision; torchvision.datasets.CIFAR10('data', download=True)"   # ~170 MB, the server can be slow
+
 python run.py --dataset MNIST      # or CIFAR10
 python -m pytest tests             # noise unit tests
 ```
