@@ -45,4 +45,6 @@ Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--mo
 | 1         | addition       | 98.59%         | 98.59%        |
 | 1         | multiplication | 98.48%         | 98.48%        |
 
-So far no noise setting beats the noise-free baseline on MNIST. Training curves for each run are in [plots/](plots/). CIFAR-10 has not been run yet.
+Under that setup no noise setting beat the noise-free baseline on MNIST. Its training curves are the `plots/results_*.png` files. These numbers are not comparable with the current setup: Adam largely cancels absolute gradient noise, the noise scale ignored gradient magnitude, and a single seed cannot resolve differences of this size.
+
+Results for the current setup (SGD, relative noise, 3 seeds) are pending. CIFAR-10 has not been run yet.
