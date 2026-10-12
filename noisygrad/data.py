@@ -44,6 +44,16 @@ def load_dataset(dataset: str, batch_size: int, val_size: int,
         val_full = dataset_cls(root='./data', train=True, download=True, transform=transform_test)
         test_dataset = dataset_cls(root='./data', train=False, download=True, transform=transform_test)
 
+    elif dataset == "SVHN":
+        normalize = transforms.Normalize((0.4377, 0.4438, 0.4728), (0.1980, 0.2010, 0.1970))
+        # No horizontal flip: mirrored digits are different digits
+        transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.ToTensor(), normalize])
+        transform_test = transforms.Compose([transforms.ToTensor(), normalize])
+        train_full = torchvision.datasets.SVHN(root='./data', split='train', download=True, transform=transform_train)
+        # Separate instance so the val split is not augmented
+        val_full = torchvision.datasets.SVHN(root='./data', split='train', download=True, transform=transform_test)
+        test_dataset = torchvision.datasets.SVHN(root='./data', split='test', download=True, transform=transform_test)
+
     else:
         raise ValueError(f"Unsupported dataset: {dataset}")
 

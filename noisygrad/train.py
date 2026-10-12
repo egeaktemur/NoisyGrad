@@ -20,7 +20,7 @@ NOISE_SEED_OFFSET = 20_000
 def create_model(dataset: str) -> nn.Module:
     if dataset == "MNIST":
         return MNISTNet()
-    elif dataset == "CIFAR10":
+    elif dataset in ("CIFAR10", "SVHN"):
         return CIFAR10Net()
     elif dataset == "CIFAR100":
         return CIFAR10Net(num_classes=100)

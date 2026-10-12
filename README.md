@@ -2,7 +2,7 @@
 
 Human learning is noisy. Can neural networks learn better if we add noise to their gradients?
 
-This repo trains small CNNs on MNIST / CIFAR-10 / CIFAR-100 with Gaussian noise added to every parameter's gradient just before each optimizer step, and compares noise levels and noise types.
+This repo trains small CNNs on MNIST / CIFAR-10 / CIFAR-100 / SVHN with Gaussian noise added to every parameter's gradient just before each optimizer step, and compares noise levels and noise types.
 
 ## Method
 
@@ -26,8 +26,9 @@ pip install -r requirements.txt
 python -c "import torchvision; torchvision.datasets.MNIST('data', download=True)"
 python -c "import torchvision; torchvision.datasets.CIFAR10('data', download=True)"   # ~170 MB, the server can be slow
 python -c "import torchvision; torchvision.datasets.CIFAR100('data', download=True)"  # ~170 MB, same server
+python -c "import torchvision; [torchvision.datasets.SVHN('data', split=s, download=True) for s in ('train', 'test')]"  # ~250 MB
 
-python run.py --dataset MNIST      # or CIFAR10, CIFAR100
+python run.py --dataset MNIST      # or CIFAR10, CIFAR100, SVHN
 python -m pytest tests             # noise unit tests
 ```
 
@@ -53,4 +54,4 @@ Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--mo
 
 Under that setup no noise setting beat the noise-free baseline on MNIST. Its training curves are in [plots/MNIST/legacy/](plots/MNIST/legacy/). These numbers are not comparable with the current setup: Adam largely cancels absolute gradient noise, the noise scale ignored gradient magnitude, and a single seed cannot resolve differences of this size.
 
-Results for the current setup (SGD, relative noise, 3 seeds) are pending. CIFAR-10 and CIFAR-100 have not been run yet. CIFAR-100 uses the CIFAR-10 CNN with a 100-way output layer.
+Results for the current setup (SGD, relative noise, 3 seeds) are pending. CIFAR-10, CIFAR-100 and SVHN have not been run yet. CIFAR-100 uses the CIFAR-10 CNN with a 100-way output layer; SVHN (street-view house-number digits, 73k train / 26k test) uses the CIFAR-10 CNN as is.

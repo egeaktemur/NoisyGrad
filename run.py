@@ -5,7 +5,7 @@ from noisygrad import ExperimentConfig, run_sweep
 
 def main():
     parser = argparse.ArgumentParser(description="Compare gradient noise levels and modes")
-    parser.add_argument("--dataset", choices=["MNIST", "CIFAR10", "CIFAR100"], default="MNIST")
+    parser.add_argument("--dataset", choices=["MNIST", "CIFAR10", "CIFAR100", "SVHN"], default="MNIST")
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--optimizer", choices=["sgd", "adam"], default="sgd")
     parser.add_argument("--lr", type=float, default=None, help="Default: 0.01 for sgd, 0.001 for adam")
