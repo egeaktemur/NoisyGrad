@@ -22,6 +22,8 @@ def create_model(dataset: str) -> nn.Module:
         return MNISTNet()
     elif dataset == "CIFAR10":
         return CIFAR10Net()
+    elif dataset == "CIFAR100":
+        return CIFAR10Net(num_classes=100)
     raise ValueError(f"Unsupported dataset: {dataset}")
 
 

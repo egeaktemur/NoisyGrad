@@ -8,7 +8,7 @@ import torch
 @dataclass
 class ExperimentConfig:
     """Configuration for experiments"""
-    dataset: str = "MNIST"  # "MNIST" or "CIFAR10"
+    dataset: str = "MNIST"  # "MNIST", "CIFAR10" or "CIFAR100"
     optimizer: str = "sgd"  # "sgd" (with momentum) or "adam"
     batch_size: int = 128
     learning_rate: float = 0.01

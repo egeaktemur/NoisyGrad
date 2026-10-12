@@ -8,6 +8,12 @@ from torch.utils.data import DataLoader, Subset
 # The train/val split is fixed across seeds so every run is selected on the same val set
 SPLIT_SEED = 0
 
+# Dataset class and per-channel normalization mean/std
+CIFAR_DATASETS = {
+    "CIFAR10": (torchvision.datasets.CIFAR10, (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    "CIFAR100": (torchvision.datasets.CIFAR100, (0.5071, 0.4865, 0.4409), (0.2673, 0.2564, 0.2762)),
+}
+
 
 def load_dataset(dataset: str, batch_size: int, val_size: int,
                  generator: torch.Generator) -> Tuple[DataLoader, DataLoader, DataLoader]:
@@ -21,21 +27,22 @@ def load_dataset(dataset: str, batch_size: int, val_size: int,
         val_full = train_full
         test_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
-    elif dataset == "CIFAR10":
+    elif dataset in CIFAR_DATASETS:
+        dataset_cls, mean, std = CIFAR_DATASETS[dataset]
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+            transforms.Normalize(mean, std)
         ])
         transform_test = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+            transforms.Normalize(mean, std)
         ])
-        train_full = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+        train_full = dataset_cls(root='./data', train=True, download=True, transform=transform_train)
         # Separate instance so the val split is not augmented
-        val_full = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_test)
-        test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+        val_full = dataset_cls(root='./data', train=True, download=True, transform=transform_test)
+        test_dataset = dataset_cls(root='./data', train=False, download=True, transform=transform_test)
 
     else:
         raise ValueError(f"Unsupported dataset: {dataset}")
