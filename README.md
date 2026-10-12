@@ -19,18 +19,22 @@ This repo trains small CNNs on MNIST / CIFAR-10 / CIFAR-100 / SVHN with Gaussian
 
 ## Usage
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). On Linux, torch comes from the CUDA 12.4 wheel index (see `pyproject.toml`), which works with NVIDIA drivers that are too old for the default PyPI build.
+
 ```bash
-pip install -r requirements.txt
+uv sync                            # create .venv and install the locked dependencies
 
 # Download datasets to data/ (run.py also downloads on first use, but parallel runs would race on the download)
-python -c "import torchvision; torchvision.datasets.MNIST('data', download=True)"
-python -c "import torchvision; torchvision.datasets.CIFAR10('data', download=True)"   # ~170 MB, the server can be slow
-python -c "import torchvision; torchvision.datasets.CIFAR100('data', download=True)"  # ~170 MB, same server
-python -c "import torchvision; [torchvision.datasets.SVHN('data', split=s, download=True) for s in ('train', 'test')]"  # ~250 MB
+uv run python -c "import torchvision; torchvision.datasets.MNIST('data', download=True)"
+uv run python -c "import torchvision; torchvision.datasets.CIFAR10('data', download=True)"   # ~170 MB, the server can be slow
+uv run python -c "import torchvision; torchvision.datasets.CIFAR100('data', download=True)"  # ~170 MB, same server
+uv run python -c "import torchvision; [torchvision.datasets.SVHN('data', split=s, download=True) for s in ('train', 'test')]"  # ~250 MB
 
-python run.py --dataset MNIST      # or CIFAR10, CIFAR100, SVHN
-python -m pytest tests             # noise unit tests
+uv run python run.py --dataset MNIST      # or CIFAR10, CIFAR100, SVHN
+uv run pytest                             # noise unit tests
 ```
+
+To add a dependency, use `uv add <package>` (or `uv add --dev <package>` for dev-only tools) so `pyproject.toml` and `uv.lock` stay in sync.
 
 Options: `--optimizer`, `--lr`, `--lr-schedule cosine`, `--subdir <name>` (save under `results/<name>/` and `plots/<name>/`), `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<dataset>/<name>_<config hash>.json` and training curves to `plots/<dataset>/<name>_<config hash>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
 
