@@ -34,24 +34,6 @@ python -m pytest tests             # noise unit tests
 
 Options: `--optimizer`, `--lr`, `--epochs`, `--seeds 0 1 2`, `--stds ...`, `--modes ...`. Datasets download to `data/`. Per-run results go to `results/<dataset>/<name>_<config hash>.json` and training curves to `plots/<dataset>/<name>_<config hash>.png`. A run is loaded from disk instead of retrained only if a result with the same config hash exists, so changing any setting triggers a rerun.
 
-## MNIST results (25 epochs, earlier setup: Adam, absolute noise `grad + N(0, std)` / `grad * N(1, std)`, single seed 42, no validation split)
+## Results
 
-| Noise std | Mode           | Final test acc | Best test acc |
-|-----------|----------------|----------------|---------------|
-| 0         | none           | 99.35%         | 99.38%        |
-| 0.001     | addition       | 99.11%         | 99.38%        |
-| 0.001     | multiplication | 99.06%         | 99.36%        |
-| 0.01      | addition       | 99.15%         | 99.29%        |
-| 0.01      | multiplication | 99.18%         | 99.24%        |
-| 0.05      | addition       | 98.75%         | 99.11%        |
-| 0.05      | multiplication | 98.88%         | 99.23%        |
-| 0.1       | addition       | 98.92%         | 98.92%        |
-| 0.1       | multiplication | 98.73%         | 98.87%        |
-| 0.5       | addition       | 98.23%         | 98.51%        |
-| 0.5       | multiplication | 98.47%         | 98.67%        |
-| 1         | addition       | 98.59%         | 98.59%        |
-| 1         | multiplication | 98.48%         | 98.48%        |
-
-Under that setup no noise setting beat the noise-free baseline on MNIST. Its training curves are in [plots/MNIST/legacy/](plots/MNIST/legacy/). These numbers are not comparable with the current setup: Adam largely cancels absolute gradient noise, the noise scale ignored gradient magnitude, and a single seed cannot resolve differences of this size.
-
-Results for the current setup (SGD, relative noise, 3 seeds) are pending. CIFAR-10, CIFAR-100 and SVHN have not been run yet. CIFAR-100 uses the CIFAR-10 CNN with a 100-way output layer; SVHN (street-view house-number digits, 73k train / 26k test) uses the CIFAR-10 CNN as is.
+Pending for all datasets. CIFAR-100 uses the CIFAR-10 CNN with a 100-way output layer; SVHN (street-view house-number digits, 73k train / 26k test) uses the CIFAR-10 CNN as is.
